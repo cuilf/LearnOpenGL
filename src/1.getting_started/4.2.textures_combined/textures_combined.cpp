@@ -14,6 +14,8 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+float alphaSet = 0.2f;
+
 int main()
 {
     // glfw: initialize and configure
@@ -91,6 +93,11 @@ int main()
     // load and create a texture 
     // -------------------------
     unsigned int texture1, texture2;
+    int width, height, nrChannels;
+    unsigned char *data = nullptr;
+    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
+
+    
     // texture 1
     // ---------
     glGenTextures(1, &texture1);
@@ -102,21 +109,23 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true); // tell stb_image.h to flip loaded texture's on the y-axis.
     // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    unsigned char *data = stbi_load(FileSystem::getPath("resources/textures/container.jpg").c_str(), &width, &height, &nrChannels, 0);
+    data= stbi_load(FileSystem::getPath("resources/textures/container.jpg").c_str(), &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        std::cout << "load texture1:"<< texture1 << std::endl;
     }
     else
     {
         std::cout << "Failed to load texture" << std::endl;
     }
+    
     stbi_image_free(data);
-    // texture 2
+
+
+  // texture 2
     // ---------
     glGenTextures(1, &texture2);
     glBindTexture(GL_TEXTURE_2D, texture2);
@@ -133,20 +142,48 @@ int main()
         // note that the awesomeface.png has transparency and thus an alpha channel, so make sure to tell OpenGL the data type is of GL_RGBA
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        std::cout << "load texture2:"<< texture2 << std::endl;
     }
     else
     {
         std::cout << "Failed to load texture" << std::endl;
+        
     }
     stbi_image_free(data);
 
+    glBindTexture(GL_TEXTURE_2D, 0);
+
     // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
     // -------------------------------------------------------------------------------------------
+
+    unsigned int index0 = 0, index1 = 1;
+    glActiveTexture(GL_TEXTURE0 + index0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+
+    glActiveTexture(GL_TEXTURE0 + index1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+
     ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
+
+    
+    //设置纹理
+    //一个纹理的默认纹理单元是0，它是默认的激活纹理单元，所以教程前面部分我们没有分配一个位置值，shader中默认使用GL_TEXTURE0
     // either set it manually like so:
-    glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+    //glUniform1i(glGetUniformLocation(ourShader.ID, "texture_2"), 1);
     // or set it via the texture class
-    ourShader.setInt("texture2", 1);
+    //ourShader.setInt("texture_2", 1);
+    // bind textures on corresponding texture units
+
+    //最好明确设定
+    glUniform1i(glGetUniformLocation(ourShader.ID, "texture_1"), index0);
+    glUniform1i(glGetUniformLocation(ourShader.ID, "texture_2"), index1);
+   
+    glUniform1f(glGetUniformLocation(ourShader.ID, "ourAlpha"), alphaSet);
+         std::cout << "alphaSet:" << alphaSet << std::endl;
+    
+   
+
 
 
 
@@ -163,16 +200,17 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // bind textures on corresponding texture units
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
+        glUniform1f(glGetUniformLocation(ourShader.ID, "ourAlpha"), alphaSet);
+       
         // render container
-        ourShader.use();
         glBindVertexArray(VAO);
+
+         //alpha setting
+         
+      
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -198,6 +236,20 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+        alphaSet += 0.001f; // change this value accordingly (might be too slow or too fast based on system hardware)
+        if(alphaSet >= 1.0f)
+            alphaSet = 1.0f;
+    }
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+        alphaSet -= 0.001f; // change this value accordingly (might be too slow or too fast based on system hardware)
+        if (alphaSet <= 0.0f)
+            alphaSet = 0.0f;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

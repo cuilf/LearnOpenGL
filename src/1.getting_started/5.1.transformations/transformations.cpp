@@ -16,7 +16,7 @@ void processInput(GLFWwindow *window);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_HEIGHT = 800;
 
 int main()
 {
@@ -146,6 +146,23 @@ int main()
     ourShader.setInt("texture1", 0);
     ourShader.setInt("texture2", 1);
 
+    // get matrix's uniform location and set matrix
+    unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+
+    // bind textures on corresponding texture units
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
+
+    // create transformations
+    glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    
+        
+   
+    
+    ourShader.use();
+    glBindVertexArray(VAO);
 
     // render loop
     // -----------
@@ -159,26 +176,37 @@ int main()
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        
+        
+        transform = glm::mat4(1.0f);
+        float angle=(float)glfwGetTime()/2;
 
-        // bind textures on corresponding texture units
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
-        // create transformations
-        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        //先移动后旋转，旋转点也跟着移动
         transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        // get matrix's uniform location and set matrix
-        ourShader.use();
-        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        transform = glm::rotate(transform, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+       
+        
         glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
         // render container
-        glBindVertexArray(VAO);
+        
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+        transform = glm::mat4(1.0f);
+        float scaleAmount = (sin(glfwGetTime()) ) / 2;
+       
+
+        //先旋转后移动
+        transform = glm::scale(transform, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
+        //transform = glm::scale(transform, glm::vec3(0.5, 0.5, 0.5));
+        transform = glm::rotate(transform, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+        transform = glm::translate(transform, glm::vec3(-0.5f, 0.5f, 0.1f));
+        //transform = glm::scale(transform, glm::vec3(0.5, 0.5, 0.5));
+
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+        
+         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

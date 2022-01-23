@@ -55,10 +55,10 @@ int main()
     // ------------------------------------------------------------------
     float vertices[] = {
         // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+         0.8f,  0.8f, 0.0f,   1.0f, 0.0f, 0.0f,   1.5f, 1.5f, // top right
+         0.8f, -0.8f, 0.0f,   0.0f, 1.0f, 0.0f,   1.5f, 0.0f, // bottom right
+        -0.8f, -0.8f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -0.8f,  0.8f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.5f  // top left 
     };
     unsigned int indices[] = {  
         0, 1, 3, // first triangle
@@ -69,6 +69,10 @@ int main()
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
+
+
+    //-------------------------------
+    //绑定vao后，针对VBO和EBO的操作都是生效在VAO中
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -87,6 +91,9 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    //VAO绑定恢复默认
+    glBindVertexArray(0);
+    //-------------------------------
 
     // load and create a texture 
     // -------------------------
@@ -94,17 +101,19 @@ int main()
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); //设置缩小时过滤方式
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); //设置放大时的过滤方式
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    unsigned char *data = stbi_load(FileSystem::getPath("resources/textures/container.jpg").c_str(), &width, &height, &nrChannels, 0);
+    stbi_set_flip_vertically_on_load(true);
+    unsigned char *data = stbi_load(FileSystem::getPath("resources/textures/nami.png").c_str(), &width, &height, &nrChannels, 0);
     if (data)
     {
+        
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }
@@ -113,8 +122,14 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
+    //texture绑定回复默认
+    glBindTexture(GL_TEXTURE_2D, 0);
+  
 
+    // render container
+    ourShader.use();
 
+       
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -128,12 +143,11 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+        //为保证绘制正确的VAO和texture，在draw之前重新绑定
+        glBindVertexArray(VAO);
         // bind Texture
         glBindTexture(GL_TEXTURE_2D, texture);
-
-        // render container
-        ourShader.use();
-        glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

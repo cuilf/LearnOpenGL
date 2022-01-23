@@ -54,7 +54,7 @@ int main()
     float vertices[] = {
         // positions         // colors
          0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
+        0.0f, 0.0f, 0.0f,  0.0f, 1.0f, 0.0f,  // bottom left
          0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // top 
     };
 
@@ -78,6 +78,7 @@ int main()
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     // glBindVertexArray(0);
 
+    float xOffsetLocation = glGetUniformLocation(ourShader.ID, "xOffset");
 
     // render loop
     // -----------
@@ -94,6 +95,9 @@ int main()
 
         // render the triangle
         ourShader.use();
+
+        glUniform1f(xOffsetLocation, 0.5f);
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

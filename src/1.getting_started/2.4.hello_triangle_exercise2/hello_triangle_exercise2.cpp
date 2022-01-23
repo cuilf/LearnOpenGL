@@ -105,9 +105,9 @@ int main()
         -0.45f, 0.5f, 0.0f,  // top 
     };
     float secondTriangle[] = {
-        0.0f, -0.5f, 0.0f,  // left
-        0.9f, -0.5f, 0.0f,  // right
-        0.45f, 0.5f, 0.0f   // top 
+        0.0f, -0.7f, 0.0f,  // left
+        0.9f, -0.7f, 0.0f,  // right
+        0.45f, 0.4f, 0.1f   // top 
     };
     unsigned int VBOs[2], VAOs[2];
     glGenVertexArrays(2, VAOs); // we can also generate multiple VAOs or buffers at the same time

@@ -123,6 +123,8 @@ int main()
     // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
     // glBindVertexArray(0);
 
+     int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
+
 
     // bind the VAO (it was already bound, but just to demonstrate): seeing as we only have a single VAO we can 
     // just bind it beforehand before rendering the respective triangle; this is another approach.
@@ -146,10 +148,10 @@ int main()
         glUseProgram(shaderProgram);
 
         // update shader uniform
-        double  timeValue = glfwGetTime();
-        float greenValue = static_cast<float>(sin(timeValue) / 2.0 + 0.5);
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue) / 2.0f + 0.5f;
+       
+        glUniform4f(vertexColorLocation, 1.0f, greenValue, 1.0f, 0.1f);
 
         // render the triangle
         glDrawArrays(GL_TRIANGLES, 0, 3);
